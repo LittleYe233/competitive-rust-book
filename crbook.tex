@@ -63,10 +63,11 @@ writeln!(out, "{} {}", a, b).ok();
     \caption{具体的输入输出示例}
 \end{listing}
 
+\newpage
 \section{算术运算}
 \subsection{判断浮点数的值是否为整数}
 
-\texttt{f32} 和 \texttt{f64} 类型实现了 \texttt{.fract()} 方法, 用以输出浮点数的小数部分. 官方示例如下\footnote{\url{https://doc.rust-lang.org/std/primitive.f64.html\#method.fract}}:
+\texttt{f32} 和 \texttt{f64} 类型实现了 \texttt{.fract()} 方法, 用以输出浮点数的小数部分. 官方示例如下\footnote{\url{https://doc.rust-lang.org/std/primitive.f64.html\#method.fract}.}:
 
 \begin{listing}
     \linespread{1}
@@ -84,6 +85,103 @@ assert!(abs_difference_y < 1e-10);
 
 因此, 只需要判断这个方法的返回值是否为 \texttt{0.0} 即可判断浮点数的值是否为整数.
 
+\subsection{最值问题}
+
+Rust 中得到一个切片 \texttt{v} 的最值 (以最大值为例) 只需使用 \texttt{*v.iter().max().unwrap()} 即可. 若要得到该最值对应的索引 (类似于 NumPy 中的 \texttt{.argmax()}), 会稍显麻烦一些\footnote{\url{https://stackoverflow.com/a/57815298/12002560}.}:
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+fn argmax<T: Ord + Copy>(v: &[T]) -> Option<usize> {
+    v.iter().enumerate().max_by_key(|(_, &v)| v).map(|(idx, _)| idx)
+}
+
+fn argmax<T: Ord>(v: &[T]) -> Option<usize> {
+    v.iter().enumerate().max_by(|(_, v0), (_, v1)| v0.cmp(v1)).map(|(idx, _)| idx)
+}
+    \end{minted}
+    \caption{NumPy 中 .argmax() 的部分实现}
+\end{listing}
+
+两个版本分别适用于实现与否 \texttt{Copy} trait 的情况. 示例如下:
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+fn argmax<T: Ord + Copy>(v: &[T]) -> Option<usize> {
+    v.iter().enumerate().max_by_key(|(_, &v)| v).map(|(idx, _)| idx)
+}
+
+fn main() {
+    let v = vec![100, 90, 1000, -200, 1, -1000, 800];
+    assert_eq!(*v.iter().max().unwrap(), 1000);
+    assert_eq!(argmax(&v).unwrap(), 2)
+}
+    \end{minted}
+    \caption{argmax() 的实际应用}
+\end{listing}
+
+\newpage
+\section{算法}
+\subsection{二分查找}
+
+我们直接考虑实现 C++ 中的 \texttt{std::lower\_bound()} 和 \texttt{std::upper\_bound()}. 这两个函数的含义分别是\footnote{\url{https://en.cppreference.com/w/cpp/algorithm/lower\_bound} 和 \url{https://en.cppreference.com/w/cpp/algorithm/upper\_bound}.}:
+
+\begin{itemize}
+    \item \texttt{std::lower\_bound()}: 返回第一个\textbf{不在}指定值\textbf{前}的元素;
+    \item \texttt{std::upper\_bound()}: 返回第一个\textbf{在}指定值\textbf{后}的元素.
+\end{itemize}
+
+这可以直接由 Rust 中的 \texttt{.binary\_search\_by()} 实现\footnote{\url{https://stackoverflow.com/a/75790348/12002560}.}. 假定需要二分查找的切片为升序排列的 \texttt{Vec<i32>} (也就是说, \textit{限定了其容器类型和内容物类型}).
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+fn upper_bound(v: &Vec<i32>, x: i32) -> usize {
+    v.binary_search_by(|probe| match probe.cmp(&x) {
+        Ordering::Equal => Ordering::Less,
+        ord => ord
+    }).unwrap_err()
+}
+    \end{minted}
+    \caption{C++ std::upper\_bound() 函数的实现}
+\end{listing}
+
+若实现 \texttt{std::lower\_bound()}, 只需将第 3 行的 \texttt{Ordering:Less} 改为 \texttt{Ordering:Greater} 即可. 以下为该实现实际使用的示例:
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+use core::cmp::Ordering;
+
+fn upper_bound(v: &Vec<i32>, x: i32) -> usize {
+    v.binary_search_by(|probe| match probe.cmp(&x) {
+        Ordering::Equal => Ordering::Less,
+        ord => ord
+    }).unwrap_err()
+}
+
+fn lower_bound(v: &Vec<i32>, x: i32) -> usize {
+    v.binary_search_by(|probe| match probe.cmp(&x) {
+        Ordering::Equal => Ordering::Greater,
+        ord => ord
+    }).unwrap_err()
+}
+
+fn main() {
+    let v = vec![-100, -99, -1, 0, 8, 8, 100];
+    assert_eq!(lower_bound(&v, 7), 4);
+    assert_eq!(lower_bound(&v, 8), 4);
+    assert_eq!(lower_bound(&v, 9), 6);
+    assert_eq!(upper_bound(&v, 7), 4);
+    assert_eq!(upper_bound(&v, 8), 6);
+    assert_eq!(upper_bound(&v, 9), 6);
+}
+    \end{minted}
+    \caption{std::lower\_bound() 和 std::upper\_bound() 在 Rust 中实现的实际应用}
+\end{listing}
+
+% Appendix
 \newpage
 \section{附录}
 \subsection{程序清单列表}
