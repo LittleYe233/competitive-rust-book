@@ -1,0 +1,95 @@
+\documentclass{crbook}
+
+\begin{document}
+\ExplSyntaxOn
+
+% First page
+\title{Competitive\ Rust\ Book\ in\ Simplified\ Chinese}
+\author{LittleYe233}
+\l_crb_datemodified:n {\today}
+
+\g_crb_maketitle
+
+% Other pages
+\newpage
+\ExplSyntaxOff
+
+\section{文件操作}
+\subsection{读写到标准输入输出 (Codeforces)}
+
+Codeforces 等平台要求程序读写重定向到标准输入输出. 以下模板使用了一个自定义结构体 \texttt{Scanner} 实现按 token (以 whitespaces 隔开) 每次读入一个数据, 涵盖大部分基础类型和 \texttt{String} 等类; 输出则使用 \texttt{std::io::BufWriter} 加快写入速度.
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+#[allow(unused_imports)]
+use std::io::{BufWriter, stdin, stdout, Write}
+
+#[derive(Default)]
+struct Scanner {
+    buffer: Vec<String>
+}
+impl Scanner {
+    fn next<T: std::str::FromStr>(&mut self) -> T {
+        loop {
+            if let Some(token) = self.buffer.pop() {
+                return token.parse().ok().expect("Failed parse");
+            }
+            let mut input = String::new();
+            stdin().read_line(&mut input).expect("Failed read");
+            self.buffer = input.split_whitespace().rev().map(String::from).collect();
+        }
+    }
+}
+
+fn main() {
+    let mut scan = Scanner::default();
+    let out = &mut BufWriter::new(stdout());
+    // Write code here
+}
+    \end{minted}
+    \caption{读写到标准输入输出模板}
+\end{listing}
+
+以下为输入输出的例子:
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+let a: i32 = scan.next();
+let b = scan.next::<u64>();
+writeln!(out, "{} {}", a, b).ok();
+    \end{minted}
+    \caption{具体的输入输出示例}
+\end{listing}
+
+\section{算术运算}
+\subsection{判断浮点数的值是否为整数}
+
+\texttt{f32} 和 \texttt{f64} 类型实现了 \texttt{.fract()} 方法, 用以输出浮点数的小数部分. 官方示例如下\footnote{\url{https://doc.rust-lang.org/std/primitive.f64.html\#method.fract}}:
+
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+let x = 3.6_f64;
+let y = -3.6_f64;
+let abs_difference_x = (x.fract() - 0.6).abs();
+let abs_difference_y = (y.fract() - (-0.6)).abs();
+
+assert!(abs_difference_x < 1e-10);
+assert!(abs_difference_y < 1e-10);
+    \end{minted}
+    \caption{.fract() 方法示例}
+\end{listing}
+
+因此, 只需要判断这个方法的返回值是否为 \texttt{0.0} 即可判断浮点数的值是否为整数.
+
+\newpage
+\section{附录}
+\subsection{程序清单列表}
+% See: https://tex.stackexchange.com/a/266903
+\makeatletter
+\@starttoc{lol}
+\makeatother
+
+\end{document}
