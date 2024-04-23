@@ -103,7 +103,7 @@ fn argmax<T: Ord>(v: &[T]) -> Option<usize> {
     \caption{NumPy 中 .argmax() 的部分实现}
 \end{listing}
 
-两个版本分别适用于实现与否 \texttt{Copy} trait 的情况. 示例如下:
+\noindent 两个版本分别适用于实现与否 \texttt{Copy} trait 的情况. 示例如下:
 
 \begin{listing}
     \linespread{1}
@@ -120,6 +120,39 @@ fn main() {
     \end{minted}
     \caption{argmax() 的实际应用}
 \end{listing}
+
+\subsection{上下取整和四舍五入}
+
+上下取整和四舍五入的需求在编程竞赛中经常出现. 对于整数相除的上下取整需求, 如果仅考虑整数运算, 可以使用如下的公式:
+\begin{gather*}
+    \mathrm{floor}\left(\frac{a}{b}\right)=a/b, \\
+    \mathrm{ceil}\left(\frac{a}{b}\right)=(a+b-1)/b.
+\end{gather*}
+其中斜杠 ($/$) 表示编程语言中的整数除法.
+
+对于浮点数的四舍五入运算, 可以使用如下的公式:
+\begin{equation*}
+    \mathrm{round}(x)=\mathrm{floor}(x+0.5).
+\end{equation*}
+
+参考如下的例子:
+\begin{listing}
+    \linespread{1}
+    \begin{minted}[linenos, breaklines, frame=lines]{rust}
+fn main() {
+    let (a, b) = (23, 4);
+    assert_eq!(a / b, (((a as f64) / (b as f64)).floor() as i32));
+    assert_eq!((a + b - 1) / b, (((a as f64) / (b as f64)).ceil() as i32));
+    
+    let (x, y, z) = (3.5_f64, 3.1_f64, -3.5_f64);
+    assert_eq!((x + 0.5).floor(), 4.0);
+    assert_eq!((y + 0.5).floor(), 3.0);
+    assert_eq!((z + 0.5).floor(), -3.0);
+}
+    \end{minted}
+    \caption{上下取整和四舍五入的示例}
+\end{listing}
+
 
 \newpage
 \section{算法}
@@ -180,6 +213,12 @@ fn main() {
     \end{minted}
     \caption{std::lower\_bound() 和 std::upper\_bound() 在 Rust 中实现的实际应用}
 \end{listing}
+
+\newpage
+\section{数据结构}
+\subsection{哈希表 (Hash Map)}
+
+\subsection{哈希集 (Hash Set)}
 
 % Appendix
 \newpage
