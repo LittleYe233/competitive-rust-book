@@ -6,6 +6,7 @@
     linespread=1.5
 ]{ctexart}
 
+\RequirePackage{amsmath}
 \RequirePackage{booktabs}
 \RequirePackage{caption}
 \RequirePackage{expl3}
